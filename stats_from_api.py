@@ -97,7 +97,7 @@ url = "https://v3.football.api-sports.io/transfers"
 
 headers = {
 	"x-rapidapi-host": "v3.football.api-sports.io",
-	"x-rapidapi-key": "xxxxxxxxxxxxxxxxxxxxxxxx" # Insert user API key
+	"x-rapidapi-key": "b69bc50a7b3f69db6443565654f106fc" # Insert user API key
 }
 
 # Get statistics data and add to CSV       
@@ -132,5 +132,4 @@ for start, end in teams_ids:
         time.sleep(5)
    
        
- 
-    
+  
