@@ -1,4 +1,4 @@
-from stats_from_api import endpoint_validation, extract_data, get_api_response, gather_all_pages_data, fetch_data_from_api, get_players_stats, get_transfers_data, list_of_ints
+from stats_from_api import endpoint_validation, extract_data, get_api_response, gather_all_pages_data, fetch_data_from_api, get_players_stats, get_transfers_data, list_of_ints, get_teams_from_country
 import unittest
 from unittest.mock import patch, Mock, mock_open
 from requests.exceptions import HTTPError, ReadTimeout, ConnectionError, MissingSchema, RequestException
@@ -239,6 +239,7 @@ class TestGatherAllPagesData(unittest.TestCase):
     
 class TestFetchDataFromApi(unittest.TestCase):
     
+    # Test when given endpoint isn't "teams"
     @patch('stats_from_api.get_api_response')
     @patch('stats_from_api.gather_all_pages_data')
     @patch('stats_from_api.extract_data')
@@ -262,8 +263,32 @@ class TestFetchDataFromApi(unittest.TestCase):
         result_df = fetch_data_from_api(url, endpoint, api_headers, queryparams)
         expected_df = pd.json_normalize(extracted_data)
         
+        pd.testing.assert_frame_equal(result_df, expected_df)
+        
+             
+    # Test when given endpoint is "teams"
+    @patch('stats_from_api.get_api_response')
+    @patch('stats_from_api.gather_all_pages_data')
+    def test_fetch_data_from_api_teams_endpoint(self, mock_gather, mock_get):
+        url = ''
+        endpoint = 'teams'
+        api_headers = {}
+        queryparams={}
+        data = {"get": "some",
+                "parameters": {'sth': 1},
+                "paging": {'current': 1, 'total': 1}, 
+                "response": [{"foo": 1}, {"xyz": 2}]
+                }
+        all_pages_data = [{"foo": 1}, {"xyz": 2}]
+        
+        mock_get.return_value = data
+        mock_gather.return_value = all_pages_data
+        
+        result_df = fetch_data_from_api(url, endpoint, api_headers, queryparams)
+        expected_df = pd.json_normalize(all_pages_data)s
         
         pd.testing.assert_frame_equal(result_df, expected_df)
+
         
 class TestGetPlayerStats(unittest.TestCase):
     
@@ -340,6 +365,50 @@ class TestGettransfersData(unittest.TestCase):
             get_transfers_data(url, api_key, teams_ids)
             
             self.assertEqual(mock_open_file.call_count, 5)
+            
+class TestGetTeamsFromCountry(unittest.TestCase):
+    
+    @patch('stats_from_api.fetch_data_from_api')
+    @patch('pandas.DataFrame.to_csv')
+    def test_get_teams_from_country(self, mock_to_csv, mock_fetch):
+        url = ''
+        api_key = 'key'
+        country = "Poland"
+        
+        mock_df = pd.DataFrame({
+            'Name': ['Alan', 'John', 'Leo'],
+            'Club': ['NYC', 'LA', 'SA'],
+            'Score': [2.5, 5.1, 3.8]
+        })
+           
+        mock_fetch.return_value = mock_df
+        
+        get_teams_from_country(url, api_key, country)
+        
+        expected_calls_to_csv = [unittest.mock.call(f'./data/teams_from_Poland.csv', encoding='utf-8-sig')]
+          
+        mock_to_csv.assert_has_calls(expected_calls_to_csv)
+        
+    @patch('stats_from_api.fetch_data_from_api')
+    @patch('pandas.DataFrame.to_csv')
+    def test_get_teams_from_country_csv_err(self, mock_to_csv, mock_fetch):
+        url = ''
+        api_key = 'key'
+        country = "Poland"
+        
+        mock_df = pd.DataFrame({
+            'Name': ['Alan', 'John', 'Leo'],
+            'Club': ['NYC', 'LA', 'SA'],
+            'Score': [2.5, 5.1, 3.8]
+        })
+           
+        mock_fetch.return_value = mock_df
+        
+        mock_to_csv.side_effect = Exception("CSV writing error")
+        with self.assertRaises(Exception):
+            get_teams_from_country(url, api_key, country)
+            
+        mock_to_csv.assert_called()
             
             
               

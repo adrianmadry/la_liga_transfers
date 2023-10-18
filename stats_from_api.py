@@ -82,8 +82,11 @@ def fetch_data_from_api(url: str, endpoint: str, api_headers: dict[str, str], qu
     url = url + endpoint 
     data = get_api_response(url, api_headers, queryparams)
     all_pages_data = gather_all_pages_data(data, url, api_headers, queryparams)
-    extracted_data = extract_data(all_pages_data, endpoint)   
-    df = pd.json_normalize(extracted_data)
+    if endpoint == "teams":
+        df = pd.json_normalize(all_pages_data)
+    else:
+        extracted_data = extract_data(all_pages_data, endpoint)   
+        df = pd.json_normalize(extracted_data)
     return df
 
 
@@ -126,7 +129,14 @@ def get_transfers_data(url: str, api_key:str, teams_ids: list[range | int]) -> N
                 df.to_csv(file, header=csv_headers)
         csv_headers = False # No headers should be appended to CSV after get 1st team data
 
+# Function to get data of all teams from given country        
+def get_teams_from_country(url: str, api_key: str, country: str) -> None:
+    headers = {"x-rapidapi-host": "v3.football.api-sports.io", "x-rapidapi-key": api_key}
+    df = fetch_data_from_api(url, 'teams', headers, queryparams={"country": country})
+    df.to_csv(f'./data/teams_from_{country}.csv', encoding='utf-8-sig')
+
 
 # get_transfers_data(url="https://v3.football.api-sports.io/", api_key="xxxxxxx", teams_ids=[755, range(756, 760)])
 # get_players_stats(url="https://v3.football.api-sports.io/", api_key="xxxxxxx", start_season=2015, end_season=2016, league_id=140) 
+# get_teams_from_country(url="https://v3.football.api-sports.io/", api_key="xxxxxx", country="Spain")
   
