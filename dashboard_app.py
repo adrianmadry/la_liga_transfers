@@ -44,20 +44,20 @@ st.text('')
 # Declare columns (split dashboard layout)
 col1, col2 = st.columns((1, 1.5))
 
-# Display foreign vs spanish transfers
+# Display foreign vs spanish transfers plot
 foreign_spanish = filtered_df['transfer_type'].value_counts(normalize=True) * 100
+
 plt.style.use('ggplot')
 fig, ax = plt.subplots(figsize=(5,5))
 ax.pie(foreign_spanish, labels=foreign_spanish.index, autopct='%1.1f%%')
 ax.set_title('Percentage share for spanish and foreign transfers')
 col1.pyplot(fig)
 
-# Display Cumulative 'Transfer Fee' over time
+# Display Cumulative 'Transfer Fee' over time plot
 fee_time_df = filtered_df.sort_values(by='transfers_date')
 fee_time_df['transfers_date'] = pd.to_datetime(fee_time_df['transfers_date'])
 fee_time_df['cumulative_transfer_fee'] = fee_time_df['transfer_fee'].fillna(0.0).cumsum()
 
-# Plot the data
 plt.style.use('ggplot')
 fig, ax = plt.subplots(figsize=(8, 4))
 ax.plot(fee_time_df['transfers_date'], fee_time_df['cumulative_transfer_fee'], color='steelblue')
@@ -68,10 +68,8 @@ ax.grid(True)
 
 col2.pyplot(fig)
 
-# Declare columns (split dashboard layout)
-col3_spacer, col3, col4_spacer, col_4, col5_spacer = st.columns((.2, 1.5, .4, 4.4, .2))
-
 # Correlation viewer
+col3_spacer, col3, col4_spacer, col_4, col5_spacer = st.columns((.2, 1.5, .4, 4.4, .2)) # Declare columns (split dashboard layout)
 col3.subheader('Correlation of Game Stats')
 label_columns_dict_correlation = {"Goals": "statistics_goals_total", "Transfer Fee": "transfer_fee", "Player Age": "player_age", "Player_rating": "statistics_games_rating"}
 with col3:
@@ -86,3 +84,29 @@ ax.set_title('correlation plot')
 ax.grid(True)
 col_4.pyplot(fig)
 
+# TOP Players stats viewer
+col6_spacer, col6, col7_spacer, col_7, col8_spacer = st.columns((.2, 2.0, .4, 4.4, .2)) # Declare columns (split dashboard layout)
+col6.subheader('TOP Player Stats Viewer')
+top_stats_dict_correlation = {'Performance Metric': 'performance_metric', 'Transfer Fee': 'transfer_fee', 'Goals Total': 'statistics_goals_total', 'Assist Total': 'statistics_goals_assists', 'Rating per game (mean)': 'statistics_games_rating', 'Player Age': 'player_age', 
+ 'Shots Total': 'statistics_shots_total', 'Game appearences': 'statistics_games_appearences', "Total min in game": 'statistics_games_minutes', 
+ 'Key Passes Total': 'statistics_passes_key', 'Pass Accuracy': 'statistics_passes_accuracy', 'Interceptions Total':'statistics_tackles_interceptions', 'Duels Won': 'statistics_duels_won'}
+top_stats_df = filtered_df[['player_name'] + list(top_stats_dict_correlation.values())]
+
+with col6:
+    st.markdown('Choose your stats?')    
+    x_axis_selection = st.selectbox ("Which statisctics would you like to see?", list(top_stats_dict_correlation.keys()))
+       
+newdf = top_stats_df[['player_name', top_stats_dict_correlation[x_axis_selection]]].dropna().sort_values(by=top_stats_dict_correlation[x_axis_selection], ascending=False).head(10)
+
+plt.style.use('ggplot')
+fig, ax = plt.subplots(figsize=(6,4))
+bars = ax.bar(newdf['player_name'], newdf[top_stats_dict_correlation[x_axis_selection]], color='lightsteelblue')
+
+ax.set_xticklabels(newdf['player_name'], rotation=45, ha='right', size=8)
+for bar in bars:
+    yval = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2, yval + 0.05, round(yval, 2), ha='center', va='bottom')
+ax.set_title(f'TOP 10 Players - {x_axis_selection} Stats')
+ax.grid(True)
+col_7.pyplot(fig)
+   
