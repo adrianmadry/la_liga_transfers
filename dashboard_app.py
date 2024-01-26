@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+from sqlalchemy import create_engine
 
 
 st.set_page_config(page_title='Dashboard_app', page_icon=':soccer:', layout='wide')
@@ -12,21 +13,39 @@ This app displays statistics of players in first seasin after transfer to La Lig
 * **Data source:** [API-Football](https://www.api-football.com/).
 """)
 
-
 # Import data
-df = pd.read_csv('./data/merged_df.csv')
+# Database connection
+server = 'DESKTOP-FK1AJ2V'
+database = 'la_liga_transfers'
+driver = 'ODBC Driver 17 for SQL Server'
+engine = create_engine(f'mssql+pyodbc://@{server}/{database}?driver={driver}')
+
+# Query data from database
+df = pd.read_sql('SELECT * FROM dbo.merged_data', con=engine)
+
+######### SIDEBARS AREA #########
+st.sidebar.header('User Input Features')
 
 # Sidebar for Year
-st.sidebar.header('User Input Features')
 years_list = list(reversed(range(2015,2023)))
 years_list.append('ALL')
 selected_year = st.sidebar.selectbox('Year', years_list, index=years_list.index('ALL'))
 
-# Get data from chosen year
-if selected_year == 'ALL':
+    # Get data from chosen year
+if selected_year == 'ALL': 
     playerstats = df
 else:
     playerstats = df[df['season_of_transfer'] == selected_year]
+    
+# Sidebar for transfer window period
+windows_list = ['Summer', 'Winter', 'Other', 'ALL']
+selected_window = st.sidebar.selectbox('Transfer window', windows_list, index=windows_list.index('ALL'))
+
+    # Get data from chosen window
+if selected_window == 'ALL': 
+    pass
+else:
+    playerstats = playerstats[playerstats['transfers_window'] == selected_window]
 
 # Sidebar Team selection
 sorted_unique_teams = sorted(playerstats['transfers_teams_in_name'].unique())
@@ -71,18 +90,24 @@ col2.pyplot(fig)
 # Correlation viewer
 col3_spacer, col3, col4_spacer, col_4, col5_spacer = st.columns((.2, 1.5, .4, 4.4, .2)) # Declare columns (split dashboard layout)
 col3.subheader('Correlation of Game Stats')
-label_columns_dict_correlation = {"Goals": "statistics_goals_total", "Transfer Fee": "transfer_fee", "Player Age": "player_age", "Player_rating": "statistics_games_rating"}
+attribute_x_dict_correlation = {"Goals": "statistics_goals_total", "Transfer Fee": "transfer_fee", "Player Age": "player_age", "Player_rating": "statistics_games_rating", 'Performance Metric': 'performance_metric', 
+                                'Assist Total': 'statistics_goals_assists', "Total min in game": 'statistics_games_minutes', 'Key Passes Total': 'statistics_passes_key'}
+attribute_y_dict_correlation = {"Player_rating": "statistics_games_rating", "Goals": "statistics_goals_total", "Transfer Fee": "transfer_fee", "Player Age": "player_age", 'Performance Metric': 'performance_metric', 
+                                'Assist Total': 'statistics_goals_assists', "Total min in game": 'statistics_games_minutes', 'Key Passes Total': 'statistics_passes_key'}
 with col3:
     st.markdown('Choose your stats?')    
-    x_axis_selection = st.selectbox ("Which attribute do you want on the x-axis?", list(label_columns_dict_correlation.keys()))
-    y_axis_selection = st.selectbox ("Which attribute do you want on the y-axis?", list(label_columns_dict_correlation.keys()))
+    x_axis_selection = st.selectbox ("Which attribute do you want on the x-axis?", list(attribute_x_dict_correlation.keys()))
+    y_axis_selection = st.selectbox ("Which attribute do you want on the y-axis?", list(attribute_y_dict_correlation.keys()))
 
 plt.style.use('ggplot')
 fig, ax = plt.subplots(figsize=(6,4))
-ax.scatter(filtered_df[label_columns_dict_correlation[x_axis_selection]], filtered_df[label_columns_dict_correlation[y_axis_selection]], alpha=0.5)
+ax.scatter(filtered_df[attribute_x_dict_correlation[x_axis_selection]], filtered_df[attribute_y_dict_correlation[y_axis_selection]], alpha=0.5)
 ax.set_title('correlation plot')
 ax.grid(True)
 col_4.pyplot(fig)
+
+st.text('')
+st.text('')
 
 # TOP Players stats viewer
 col6_spacer, col6, col7_spacer, col_7, col8_spacer = st.columns((.2, 2.0, .4, 4.4, .2)) # Declare columns (split dashboard layout)
@@ -105,8 +130,7 @@ bars = ax.bar(newdf['player_name'], newdf[top_stats_dict_correlation[x_axis_sele
 ax.set_xticklabels(newdf['player_name'], rotation=45, ha='right', size=8)
 for bar in bars:
     yval = bar.get_height()
-    ax.text(bar.get_x() + bar.get_width()/2, yval + 0.05, round(yval, 2), ha='center', va='bottom')
+    ax.text(bar.get_x() + bar.get_width()/2, yval, round(yval, 2), ha='center', va='bottom')
 ax.set_title(f'TOP 10 Players - {x_axis_selection} Stats')
 ax.grid(True)
 col_7.pyplot(fig)
-   

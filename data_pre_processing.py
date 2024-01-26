@@ -95,6 +95,9 @@ df_stats.columns = df_stats.columns.str.replace('.', '_')
 # Get rid of duplicated rows
 df_stats.drop_duplicates(inplace=True)
 
+col_to_check = ['player_id', 'statistics_team_id', 'statistics_league_season', 'statistics_games_minutes', 'statistics_games_rating', 'statistics_passes_total']
+df_stats.drop_duplicates(subset=col_to_check, inplace=True)
+
 # Drop rows with None values in 'team_name'
 mask = df_stats['statistics_team_name'].isna()
 df_stats = df_stats.drop(df_stats[mask].index)
@@ -125,7 +128,6 @@ df_stats['performance_metric'] = performance_metric
 # Rename column names
 df_spanish_teams.columns = df_spanish_teams.columns.str.replace('.', '_')  
      
-
 
 #### EXPORT DATA TO DATABASE ####
 server = 'DESKTOP-FK1AJ2V'
