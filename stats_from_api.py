@@ -34,16 +34,12 @@ def gather_all_pages_data(data: dict[str, Any], url: str, api_headers: dict[str,
         all_pages_data = data['response']
 
     else:
-        # print(f'No of pages for this season is {total_pagination}')
         all_pages_data = []
         for page_num in range(1, total_pagination + 1): # Iterating through all reponse pages
             queryparams["page"] = page_num # add to query no of page from get data
             response = get_api_response(url, api_headers, queryparams)
             page_data = response['response']
-            # print(f'Page number is {page_num}')
-            # print(f'Response lenght is {len(page_data)}')
             all_pages_data.extend(page_data)
-            # print(f'Data List lenght is {len(all_pages_data)}')
 
             time.sleep(10)
 
@@ -59,9 +55,11 @@ def endpoint_validation(endpoint: str) -> str:
   else:
       raise ValueError("Invalid endpoint. Only 'players' or 'transfers' are allowed.")
 
-# Function to extract and organize data
-# Function transform input data by filtering based on given endpoint ('players' or 'transfers')
-# It separates events, such as transfers or statistics, from nested dictionaries into individual event dictionaries
+""" 
+Function to extract and organize data
+Function transform input data by filtering based on given endpoint ('players' or 'transfers')
+It separates events, such as transfers or statistics, from nested dictionaries into individual event dictionaries
+"""
 def extract_data(dataset: list[dict], endpoint: str) -> list[dict]:
   # Check if given endpoint is correct and set key_to_filter accordingly
   key_to_filter = endpoint_validation(endpoint)
@@ -119,7 +117,7 @@ def list_of_ints(list_to_handle: list[range | int]) -> list[int]:
 
 def get_transfers_data(url: str, api_key:str, teams_ids: list[range | int]) -> None:
     headers = {"x-rapidapi-host": "v3.football.api-sports.io", "x-rapidapi-key": api_key}
-    csv_headers = True # Parameter to controll writeting headers to CSV
+    csv_headers = True # Parameter to controll writing headers to CSV
     list_of_teams_ids = list_of_ints(teams_ids)
     
     # Get data for each team ID and save it all to one CSV file  

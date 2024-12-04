@@ -93,6 +93,44 @@ class TestExtractData(unittest.TestCase):
         
         self.assertEqual(result, expected_result)
     
+    
+class TestListOfInts(unittest.TestCase):
+    
+    # Single range input
+    def test_range_input(self):
+        input_list = [range(1, 7)]
+        result = list_of_ints(input_list)
+        expected_result = [1, 2, 3, 4, 5, 6]
+        self.assertEqual(result, expected_result)
+    
+    # Single int input
+    def test_int_input(self):
+        input_list = [3]
+        result = list_of_ints(input_list)
+        expected_result = [3]
+        self.assertEqual(result, expected_result)
+    
+    # Combination of int and range
+    def test_combined_input(self):
+        input_list = [range(1,3), 44, -1, range(-3, 2)]
+        result = list_of_ints(input_list)
+        expected_result = [1, 2, 44, -1, -3, -2, -1, 0, 1]
+        self.assertEqual(result, expected_result)  
+        
+    # Empty input list
+    def test_empty_input(self):
+        input_list = []
+        result = list_of_ints(input_list)
+        expected_result = []
+        self.assertEqual(result, expected_result)
+    
+    # Invalid dtype input    
+    def test_invalid_input(self):
+        input_list = [range(1, 4), "string", 5]
+        with self.assertRaises(ValueError):
+            list_of_ints(input_list)
+    
+
 class TestGetApiResponse(unittest.TestCase):
 
     @patch('stats_from_api.requests.get')
@@ -285,7 +323,7 @@ class TestFetchDataFromApi(unittest.TestCase):
         mock_gather.return_value = all_pages_data
         
         result_df = fetch_data_from_api(url, endpoint, api_headers, queryparams)
-        expected_df = pd.json_normalize(all_pages_data)s
+        expected_df = pd.json_normalize(all_pages_data)
         
         pd.testing.assert_frame_equal(result_df, expected_df)
 
