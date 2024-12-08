@@ -126,9 +126,20 @@ df_stats['performance_metric'] = performance_metric
 
                             #### {df_spanish_teams} ####
 # Rename column names
-df_spanish_teams.columns = df_spanish_teams.columns.str.replace('.', '_')  
-     
+df_spanish_teams.columns = df_spanish_teams.columns.str.replace('.', '_')
 
+#### MERGE DATASETS ####
+# {merged_df} - List of players transferred to La liga clubs in the seasons from 2015/16 to 2022/23 and  their statistics in the first season after transfer
+
+df_merged = df_transfers.merge(df_stats, how='inner', 
+                               left_on=['player_id', 'player_name', 'transfers_teams_in_name', 'season_of_transfer'],
+                               right_on=['player_id', 'player_name', 'statistics_team_name', 'statistics_league_season'])
+    
+# Create new column for categorize transfers 
+df_merged['transfer_type'] = [None if np.isnan(id)  else
+                              'Spanish' if id in df_spanish_teams['team_id'].unique() else
+                              'Foreign' for id in df_merged['transfers_teams_out_id'].astype(float)]
+     
 #### EXPORT DATA TO DATABASE ####
 server = 'DESKTOP-FK1AJ2V'
 database = 'la_liga_transfers'
@@ -136,8 +147,7 @@ driver = 'ODBC Driver 17 for SQL Server'
 engine = create_engine(f'mssql+pyodbc://@{server}/{database}?driver={driver}')
 
 with engine.connect() as con:
-    df_transfers.to_sql(name='transfers_list', con=con, if_exists='replace', index=False)
-    df_stats.to_sql(name='player_stats', con=con, if_exists='replace', index=False)
+    df_merged.to_sql(name='merged_data', con=con, if_exists='replace', index=False)
     df_spanish_teams.to_sql(name='spanish_teams', con=con, if_exists='replace', index=False)
 
 
