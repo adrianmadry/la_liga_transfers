@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from sqlalchemy import create_engine
-
+import numpy as np
 
 st.set_page_config(page_title='Dashboard_app', page_icon=':soccer:', layout='wide')
 st.title('La Liga Transfer Stats Dashboard')
@@ -13,15 +14,23 @@ This app displays statistics of players in first seasin after transfer to La Lig
 * **Data source:** [API-Football](https://www.api-football.com/).
 """)
 
-# Import data
-# Database connection
-server = 'DESKTOP-FK1AJ2V'
-database = 'la_liga_transfers'
-driver = 'ODBC Driver 17 for SQL Server'
-engine = create_engine(f'mssql+pyodbc://@{server}/{database}?driver={driver}')
+# MySQL connection parameters
+mysql_user = "myuser"        
+mysql_password = "mypassword" 
+mysql_host = "database"       
+mysql_port = "3306"            
+mysql_database = "mydatabase"
 
-# Query data from database
-df = pd.read_sql('SELECT * FROM dbo.merged_data', con=engine)
+# SQLAlchemy engine for MySQL
+engine = create_engine(
+    f'mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_database}'
+)
+
+# Test the connection and fetch data
+try:
+    df = pd.read_sql('SELECT * FROM my_table', con=engine)
+except Exception as e:
+    st.error(f"Error retrieving data: {e}")
 
 ######### SIDEBARS AREA #########
 st.sidebar.header('User Input Features')
@@ -30,6 +39,7 @@ st.sidebar.header('User Input Features')
 years_list = list(reversed(range(2015,2023)))
 years_list.append('ALL')
 selected_year = st.sidebar.selectbox('Year', years_list, index=years_list.index('ALL'))
+
 
     # Get data from chosen year
 if selected_year == 'ALL': 
@@ -64,6 +74,7 @@ st.text('')
 col1, col2 = st.columns((1, 1.5))
 
 # Display foreign vs spanish transfers plot
+filtered_df['transfer_type'] = filtered_df['transfer_type'].str.strip().replace("NULL", np.nan)
 foreign_spanish = filtered_df['transfer_type'].value_counts(normalize=True) * 100
 
 plt.style.use('ggplot')
@@ -83,6 +94,10 @@ ax.plot(fee_time_df['transfers_date'], fee_time_df['cumulative_transfer_fee'], c
 ax.set_title('Cumulative Transfer Fee Over Time')
 ax.set_xlabel('Transfer Date')
 ax.set_ylabel('Cumulative Transfer Fee')
+
+date_format = mdates.DateFormatter('%Y/%m')
+ax.xaxis.set_major_formatter(date_format)
+
 ax.grid(True)
 
 col2.pyplot(fig)
