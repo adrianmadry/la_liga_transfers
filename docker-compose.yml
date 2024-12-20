@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
+    image: adrianmadry968/la_liga_transfers-app:latest
     ports:
       - "8501:8501"
     depends_on:
@@ -14,9 +12,7 @@ services:
 
 
   database:
-    build:
-      context: ./database
-      dockerfile: Dockerfile
+    image: adrianmadry968/la_liga_transfers-database:latest
     ports:
       - "3306:3306"
     environment:
