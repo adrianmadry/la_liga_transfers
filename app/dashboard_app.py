@@ -10,7 +10,7 @@ st.title('La Liga Transfer Stats Dashboard')
 
 st.markdown("""
 This app displays statistics of players in first seasin after transfer to La Liga clubs
-* **Python libraries:** pandas, streamlit
+* **Python libraries:** pandas, streamlit, matplotlib
 * **Data source:** [API-Football](https://www.api-football.com/).
 """)
 
