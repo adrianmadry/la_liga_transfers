@@ -8,8 +8,7 @@ services:
     depends_on:
       database:
         condition: service_healthy
-    # volumes:
-    #   - ./app:/app
+
 
 
   database:
@@ -21,8 +20,6 @@ services:
       MYSQL_USER: myuser
       MYSQL_PASSWORD: mypassword
       MYSQL_ROOT_PASSWORD: rootpassword
-    # volumes:
-    #   - ./database/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       interval: 10s
