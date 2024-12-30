@@ -15,11 +15,11 @@ The aim of the project is to analyze incoming transfers to La Liga clubs and the
 Python, Requests, SQL Server, MySQL, Pandas, Numpy, Matplotlib, Unittest, Docker
 
 ## Running app 
-To run the webapp please pull 'docker-compose.yml' and enter the following command in the terminal:
+To run the webapp please pull `docker-compose.yml` and enter the following command in the terminal:
 
-'''
+```
 docker-compose up
-'''
+```
 
 Now you could view app at http://localhost:8501/ adress
 
